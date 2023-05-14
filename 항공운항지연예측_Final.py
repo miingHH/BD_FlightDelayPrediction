@@ -158,7 +158,7 @@ test['Estimated_Departure_Time'] = test['Estimated_Departure_Time'].apply(conver
 test['Estimated_Arrival_Time'] = test['Estimated_Arrival_Time'].apply(convert_time)
 
 
-# In[17]:
+# In[17]: 
 
 
 #test 데이터셋에서 결측값을 채우기 위해 EDT, EAT가 모두 결측값인 행이 제거된 test_filtered 사용
