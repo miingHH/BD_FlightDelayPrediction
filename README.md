@@ -27,7 +27,7 @@ https://dacon.io/competitions/official/236094/overview/description
    - 0.6561362148점 달성
 6. EDT, EAT 데이터 전처리 후 학습
    - 이는 `항공운항지연예측 Final-model` 파일에 저장함
-   - public: 0.6337836841점 , private: 0.7080757848점
+   - public: 0.6337836841점, private: 0.7080757848점
 7. 대회 종료 후, [private점수 1위의 코드](https://dacon.io/competitions/official/236094/codeshare/8341)를 참고하여 수정한 모델
    - 이는 `항공운항지연예측 with 1st.ipynb` 파일에 저장함
-   - public: 0.6234701617점, praivate: 0.7169214489점
+   - public: 0.6234701617점, private: 0.7169214489점
