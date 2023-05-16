@@ -26,8 +26,8 @@ https://dacon.io/competitions/official/236094/overview/description
 5. 나눠서 학습하는 과정에서 labeled['Delay_per']를 기준으로 학습하고 전체 평균을 기준으로 train['Delay_num']을 채워넣음
    - 0.6561362148점 달성
 6. EDT, EAT 데이터 전처리 후 학습
-   - 이는 `항공운항지연예측 Final-model` 파일에 저장함
-   - public: 0.6337836841점 , private: 0.7080757848점
+   - 이는 `항공운항지연예측 Final-model.ipynb` 파일에 저장함
+   - public: 0.6337836841점, private: 0.7080757848점
 7. 대회 종료 후, [private점수 1위의 코드](https://dacon.io/competitions/official/236094/codeshare/8341)를 참고하여 수정한 모델
    - 이는 `항공운항지연예측 with 1st.ipynb` 파일에 저장함
-   - public: 0.6234701617점, praivate: 0.7169214489점
+   - public: 0.6234701617점, private: 0.7169214489점
