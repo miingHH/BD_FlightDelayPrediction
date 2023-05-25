@@ -4,7 +4,7 @@
 # # 월간 데이콘 항공편 지연 예측 AI 경진대회
 # https://dacon.io/competitions/official/236094/overview/description
 
-# ## 빅데이터처리 기말 프로젝트
+# ## 23-1학기 빅데이터처리 기말 프로젝트
 # ### 팀원
 # - 이시내
 # - 유동혁
@@ -22,10 +22,15 @@
 #     - 0.6857301445점 달성
 # 5. 나눠서 학습하는 과정에서 labeled['Delay_per']를 기준으로 학습하고 전체 평균을 기준으로 train['Delay_num']을 채워넣음
 #     - 0.6561362148점 달성
-# 6. EDT, EAT 데이터 전처리 후 동일 과정으로 학습시킨 후 실행
-#     - 0.0655098점 달성
+# 6. EDT, EAT 데이터 전처리 후 학습
+#     - 이는 `항공운항지연예측 Final-model` 파일에 저장함
+#     - public: 0.6337836841점 , private: 0.7080757848점
+# 7. 대회 종료 후, [private점수 1위의 코드](https://dacon.io/competitions/official/236094/codeshare/8341)를 참고하여 수정한 모델
+#     - 이는 `항공운항지연예측 with 1st.ipynb` 파일에 저장함
+#     - public: 0.6234701617점, praivate: 0.7169214489점
+# 
 
-# In[5]:
+# In[1]:
 
 
 # 경고메세지 끄기
@@ -40,13 +45,7 @@ time_start =  time.time()
 print('시작 시각:', time.strftime('%Y.%m.%d - %H:%M:%S'))
 
 
-# In[6]:
-
-
-pip install pandas numpy scikit-learn xgboost bayesian-optimization
-
-
-# In[7]:
+# In[2]:
 
 
 import pandas as pd
@@ -67,7 +66,7 @@ from bayes_opt import BayesianOptimization
 from sklearn.model_selection import cross_val_score
 
 
-# In[8]:
+# In[3]:
 
 
 def seed_everything(seed):
@@ -80,7 +79,7 @@ seed_everything(42) # Seed 고정
 
 # ## 데이터 불러오기
 
-# In[9]:
+# In[4]:
 
 
 def csv_to_parquet(csv_path, save_name):
@@ -94,7 +93,7 @@ csv_to_parquet('./train.csv', 'train')
 csv_to_parquet('./test.csv', 'test')
 
 
-# In[10]:
+# In[5]:
 
 
 train = pd.read_parquet('./train.parquet')
@@ -102,19 +101,19 @@ test = pd.read_parquet('./test.parquet')
 sample_submission = pd.read_csv('sample_submission.csv', index_col = 0)
 
 
-# In[11]:
+# In[6]:
 
 
 train.info()
 
 
-# In[12]:
+# In[7]:
 
 
 test.info()
 
 
-# In[13]:
+# In[8]:
 
 
 sample_submission.info()
@@ -124,26 +123,26 @@ sample_submission.info()
 
 # #### 1. Delay열을 제외한 열에 존재하는 결측값을 채웁니다.
 
-# ##### 1-1. EDT, EAT 전처리하기
+# ##### 1-1. EDT, EAT의 전처리를 진행합니다. 
 
-# In[14]:
+# In[9]:
 
 
 #EDT, EAT가 모두 결측값인 행 제거
 train = train.dropna(subset=['Estimated_Departure_Time', 'Estimated_Arrival_Time'], how='all')
 
 
-# In[15]:
+# In[10]:
 
 
 train.info()
 
 
-# In[16]:
+# In[11]:
 
 
-#EDT, EAT 분으로 환산
-
+# Estimated Departure Time, Estimated Arrival Time을 분으로 환산
+# EDT, EAT는 hhmm의 형태인 4자리 정수이기 때문에, 아래 함수를 통해 분 형태로 바꿉니다.
 def convert_time(time):
     if pd.isna(time):
         return None
@@ -158,7 +157,7 @@ test['Estimated_Departure_Time'] = test['Estimated_Departure_Time'].apply(conver
 test['Estimated_Arrival_Time'] = test['Estimated_Arrival_Time'].apply(convert_time)
 
 
-# In[17]: 
+# In[12]:
 
 
 #test 데이터셋에서 결측값을 채우기 위해 EDT, EAT가 모두 결측값인 행이 제거된 test_filtered 사용
@@ -181,7 +180,7 @@ print("\nMean Arrival Dictionary:")
 print(mean_arrival_dict)
 
 
-# In[18]:
+# In[13]:
 
 
 def fill_arrival_time_test(row):
@@ -198,10 +197,10 @@ def fill_arrival_time_test(row):
 test['Estimated_Arrival_Time'] = test.apply(fill_arrival_time_test, axis=1)
 
 
-# In[20]:
+# In[14]:
 
 
-#train 데이터에서 같은 Origin_Airport와 Destination_Airport 사이의 거리의 평균 계산
+#train 데이터에서 같은 Origin_Airport와 Destination_Airport 사이의 소요 시간의 평균 계산
 mean_diff = train.groupby(['Origin_Airport', 'Destination_Airport']).apply(
     lambda group: (group['Estimated_Arrival_Time'] - group['Estimated_Departure_Time']).mean()
 ).to_dict()
@@ -209,7 +208,7 @@ mean_diff = train.groupby(['Origin_Airport', 'Destination_Airport']).apply(
 print(mean_diff)
 
 
-# In[21]:
+# In[15]:
 
 
 #Origin_Airport와 Destination_Airport가 같고 Estimated_Departure_Time만 확인가능할 경우 공항사이 결리는 시간 평균 더하기
@@ -231,7 +230,7 @@ print(train)
 print(test)
 
 
-# In[22]:
+# In[16]:
 
 
 #Origin_Airport와 Destination_Airport가 같고 Estimated_Arrival_Time만 확인가능할 경우 공항사이 결리는 시간 평균 빼기
@@ -253,11 +252,12 @@ print(train)
 print(test)
 
 
-# ##### 1-2.  나머지 질적 변수의 결측값을 최빈값으로 대체
+# ##### 1-2.  나머지 질적 변수의 결측값을 최빈값으로 대체합니다.
 
-# In[ ]:
+# In[17]:
 
 
+# 질적 변수의 결측값을 최빈값으로 대체합니다.
 NaN_mode_col = ['Origin_State','Destination_State','Airline','Carrier_Code(IATA)','Carrier_ID(DOT)']
 
 for col in NaN_mode_col:
@@ -273,7 +273,7 @@ print('Nan_mode_Done.')
 # #### 2. LabelEncoder를 이용해, 질적 변수들을 수치화합니다.
 # 
 
-# In[24]:
+# In[18]:
 
 
 qual_col = ['Origin_Airport', 'Origin_State', 'Destination_Airport', 'Destination_State', 'Airline', 'Carrier_Code(IATA)', 'Tail_Number']
@@ -292,7 +292,7 @@ print('qual_col Done.')
 
 # #### 3. Delay 열에 결측값이 없는 행들과 있는 행들을 분리합니다.
 
-# In[25]:
+# In[19]:
 
 
 labeled = train.dropna(subset=['Delay'])
@@ -305,7 +305,7 @@ print(unlabeled.shape)
 
 # #### 4. Delay 열의 값이 string 형태이기 때문에 이를 0 또는 1로 변환합니다.
 
-# In[26]:
+# In[20]:
 
 
 column_number = {}
@@ -324,18 +324,15 @@ print('Delay_num Done.')
 # labeled['Delay_num'] = labeled['Delay'].apply(lambda x: 1 if x == 'Delayed' else 0)
 
 
-# #### 5. 레이블이 있는 데이터의 입력 변수, 출력 변수, 레이블이 없는 데이터의 출력변수를 저장합니다.
+# #### 5. 레이블이 없는 데이터의 `['Delay_num']`열을 채우기 위해 아래 과정을 거칩니다.
+# 1. 먼저 `unlabeled`를 여러 구간으로 쪼갭니다. 여기서는 20개의 구간으로 쪼갰습니다.
+# 2. 해당 항공편이 지연될 확률을 의미하는 `['Delay_per']`열을 만듭니다.
+# 3. `labeled`를 XGBoost 모델에 학습시켜, `unlabeled`의 하나의 구간의 `['Delay_per']`열을 채워넣습니다.
+# 4. `['Delay_per']`열이 채워진 `unlabeled` 구간을 `labeled`에 합칩니다.
+# 5. 3, 4의 과정을 `unlabeled`데이터에 결측치가 없을 때까지 반복합니다.
+# 6. `['Delay_per']`열의 평균값을 구해, 이 평균값보다 지연될 확률이 낮은 항공편은 <i>Not_Delayed</i>로 간주하고, 높은 항공편은 <i>Delayed</i>로 간주해 `['Delay_num']`열의 결측치를 채워 넣습니다.
 
-# In[27]:
-
-
-print(len(unlabeled))
-
-
-# #### 6. 하이퍼 파라미터 튜닝을 수행합니다.
-# 베이지안 최적화를 사용하여 XGBoost 모델의 최적 매개변수를 찾습니다.
-
-# In[28]:
+# In[21]:
 
 
 labeled['Not_Delay_per'] = labeled['Delay_num'].apply(lambda x: 1 if x == 0 else 0).astype('float64')
@@ -371,80 +368,15 @@ for i in range(num_of_gugan):
     labeled = pd.concat([labeled, small_unlabeled])
     print(f'{i}: 구간 {L} ~ {R} 완료, labeled size: {len(labeled)}')
 
-#exclude = [0.0, 1.0]
-#filtered_data = [~np.isin(labeled['Delay_per'], exclude)]
 per_mean = np.mean(labeled['Delay_per'])
 labeled['Delay_num'] = labeled['Delay_num'].fillna((labeled['Delay_per'] > per_mean).astype(int))
 train = labeled
 print(train.shape)
 
 
-# #### 7. 찾아낸 최적의 parameters를 이용해서, XGBoost 학습을 진행하여 Delay_num의 결측치를 채워 넣습니다.
-# `labeled` 데이터프레임에 `['Not_Delay_per']`, `['Delay_per']` 두 열을 만들어주는 이유는, `bst.predict(dtest)`의 return 값이 이 형태로 return 되기 때문입니다.
-
-# In[29]:
-
-
-# # 최적 매개변수 저장
-# best_params = xgb_bo.max['params']
-
-# # 최적 매개변수 중 max_depth와 n_estimators를 정수로 변환
-# best_params['max_depth'] = int(best_params['max_depth'])
-# best_params['n_estimators'] = int(best_params['n_estimators'])
-# best_params['objective'] = 'multi:softprob'
-# best_params['num_class'] = len(sample_submission.columns)
-
-# # 최적 매개변수로 XGBoost 모델 훈련
-# bst = xgb.train(best_params, dtrain)
-
-
-# 레이블이 없는 데이터에 대한 예측값 저장
-
-
-
-
-# labeled와 unlabeled 데이터 프레임 연결하여 train 데이터 프레임 생성
-
-print("Delay_num.fill_na Done.")
-print("Dataset pre-processing Complete.")
-
-
-# #### 생성된 `unlabeled['Delay_per']` 열의 평균값을 기준으로 `['Delay_num']` 열의 결측값을 채워넣습니다.
-
-# In[30]:
-
-
-# import matplotlib.pyplot as plt
-# import seaborn as sns
-
-# # 데이터 칼럼을 data_column 변수에 할당합니다.
-# data_column = unlabeled['Delay_per']
-
-# # 1000개의 구간으로 나눕니다.
-# counts, bins = np.histogram(data_column, bins=1000)
-
-# # bar chart를 그립니다.
-# plt.bar(bins[:-1], counts, width=np.diff(bins))
-
-# # 데이터들의 평균 값을 계산합니다.
-# top_20_percent = np.percentile(data_column, 80)
-
-# # 평균 값의 위치에 세로 선을 그립니다.
-# plt.axvline(top_20_percent, color='r', linestyle='dashed', linewidth=2)
-
-# plt.show()
-
-
-# In[31]:
-
-
-# # 평균값보다 크면 Delayed, 작으면 Not_Delayed로 판단해서 ['Delay_num']을 채워 넣음
-# train['Delay_num'] = train['Delay_num'].fillna((train['Delay_per'] > top_20_percent).astype(int))
-
-
 # #### 전처리가 완료된 데이터를 csv, parquet 형태로 저장합니다.
 
-# In[32]:
+# In[22]:
 
 
 # 전처리 코드를 여러 번 실행 하지 않기 위해서 csv, parquet 형식으로 한번 분리하였음
@@ -458,7 +390,7 @@ csv_to_parquet('./train_pre.csv', 'train_pre')
 csv_to_parquet('./test_pre.csv', 'test_pre')
 
 
-# In[33]:
+# In[23]:
 
 
 # 한 번 이상 전처리 코드를 실행했다면, 이 셀부터 실행하면 됨
@@ -487,31 +419,30 @@ sample_submission = pd.read_csv('sample_submission.csv', index_col = 0)
 # ## 모델 훈련 과정
 
 # #### 1. train 데이터의 입력 변수, 출력 변수,  test 데이터의 출력변수를 저장합니다.
-# train의 출력 변수인 train_y의 경우, 결측치를 채워 넣은 Delay_per의 데이터는 기존 데이터와 달리 int형이 아닌 Delay됐을 확률(float)입니다. 따라서, 이를 반올림해 0.5 미만이면 Not_Delayed, 이상이면 Delayed로 간주합니다.
 
-# In[34]:
+# In[24]:
 
 
 train_x = train.drop(columns=['ID', 'Delay', 'Delay_num', 'Not_Delay_per', 'Delay_per'])
-train_y = train['Delay_num']
+train_y = train['Delay_num'].astype('int64')
 test_x = test.drop(columns=['ID'])
 
 
-# 모든 열이 int, float type인 것을 확인합니다.
+# 모든 입출력 변수의 데이터 타입이 int, float인 것을 확인합니다.
 
-# In[35]:
+# In[25]:
 
 
 train_x.info()
 
 
-# In[36]:
+# In[26]:
 
 
 train_y.sample(10)
 
 
-# In[37]:
+# In[27]:
 
 
 test_x.info()
@@ -520,7 +451,7 @@ test_x.info()
 # #### 2. 하이퍼 파라미터 튜닝을 수행합니다.¶
 # 베이지안 최적화를 사용하여 XGBoost 모델의 최적 매개변수를 찾습니다.
 
-# In[38]:
+# In[28]:
 
 
 # XGBoost 모델의 입력 데이터 형식인 DMatrix로 변환
@@ -558,7 +489,7 @@ print("hyper-parameter tuning for model Done.")
 
 # #### 3. 찾아낸 최적의 parameters를 이용해서, XGBoost 학습을 진행하여 모델을 훈련시킵니다.
 
-# In[39]:
+# In[29]:
 
 
 # 최적 매개변수 저장
@@ -572,9 +503,9 @@ best_params['n_estimators'] = int(best_params['n_estimators'])
 best_params['objective'] = 'multi:softprob'
 best_params['num_class'] = len(sample_submission.columns)
 
-# 최적 매개변수로 XGBoost 모델 훈련
+# 최적 매개변수로 XGBoost 모델 훈련 및 모델 내보내기
 bst = xgb.train(best_params, dtrain)
-# bst = xgb.train(params, dtrain)
+bst.save_model('model.bst')
 
 # 레이블이 없는 데이터에 대한 예측값 생성
 y_pred = bst.predict(dtest)
@@ -582,7 +513,7 @@ y_pred = bst.predict(dtest)
 
 # #### 4. 최종 제출 파일을 생성합니다.
 
-# In[40]:
+# In[30]:
 
 
 # 예측값을 submission 데이터 프레임으로 저장
@@ -595,7 +526,7 @@ submission.to_csv('FlightDelayPrediction_submission_pre_tune.csv', index=True)
 # 해당 제출 파일으로, 2023년 04월 19일 21시 기준으로 0.635점으로 2등을 달성하였습니다.
 # ![image.png](attachment:image.png)
 
-# In[41]:
+# In[31]:
 
 
 time_end = time.time()
