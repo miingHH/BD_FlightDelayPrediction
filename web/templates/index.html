@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko"> 
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Delay</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+</head>
+     
+<body class="custom-background">
+    <div class="container">
+        <div class="input-form-backgroud row">
+            <div class="input-form col-md-12 mx-auto">
+              <h4 class="mb-3">항공기 지연 예측</h4>
+              
+              <form class="validation-form" method="POST" action="/predict" novalidate>
+                
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="Month">월</label>
+                      <input type="text" class="form-control" id="Month" placeholder="" value="" name="Month" required>
+                      <div class="invalid-feedback">
+                        월을 입력해주세요.
+                      </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="Day_of_Month">일</label>
+                      <input type="text" class="form-control" id="Day_of_Month" placeholder="" value="" name="Day_of_Month" required>
+                      <div class="invalid-feedback">
+                        일을 입력해주세요.
+                      </div>
+                    </div>
+                  </div>
+  
+                  <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <label for="EDTtime">예상 출발 시간(시)</label>
+                        <input type="text" class="form-control" id="EDTtime" placeholder="" value="" name="EDTtime" required>
+                        <div class="invalid-feedback">
+                          예상 출발 시간을 입력해주세요.
+                        </div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                          <label for="EDTmin">예상 출발 시간(분)</label>
+                          <input type="text" class="form-control" id="EDTmin" placeholder="" value="" name="EDTmin" required>
+                        <div class="invalid-feedback">
+                          예상 도착 시간을 입력해주세요.
+                        </div>
+                      </div>
+                    </div>
+
+                  <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <label for="EATtime">예상 도착 시간(시)</label>
+                        <input type="text" class="form-control" id="EATtime" placeholder="" value="" name="EATtime" required>
+                        <div class="invalid-feedback">
+                          예상 출발 시간을 입력해주세요.
+                        </div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                          <label for="EATmin">예상 도착 시간(분)</label>
+                          <input type="text" class="form-control" id="EATmin" placeholder="" value="" name="EATmin" required>
+                        <div class="invalid-feedback">
+                          예상 도착 시간을 입력해주세요.
+                        </div>
+                      </div>
+                    </div>
+  
+                    <!--<div class="row">
+                      <div class="col-md-6 mb-3">
+                          <label for="Cancelled">취소 여부</label>
+                          <input type="text" class="form-control" id="Cancelled" placeholder="" value="" name="Cancelled" required>
+                        <div class="invalid-feedback">
+                          취소 여부를 입력해주세요.
+                        </div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                          <label for="Diverted">회항 여부</label>
+                        <input type="text" class="form-control" id="Diverted" placeholder="" value="" name="Diverted" required>
+                        <div class="invalid-feedback">
+                          회항 여부를 입력해주세요.
+                        </div>
+                      </div>
+                    </div>-->
+  
+                    <div class="row">
+                      <!--<div class="col-md-4 mb-3">
+                          <label for="Origind_Airport">출발 공항</label>
+                          <input type="text" class="form-control" id="Origin_Airport" placeholder="" value="" name="Origin_Airport" required>
+                        <div class="invalid-feedback">
+                          출발 공항을 입력해주세요.
+                        </div>
+                      </div>-->
+                      <div class="col-md-6 mb-3">
+                          <label for="Origin_Airport_ID">출발 공항 ID</label>
+                        <input type="text" class="form-control" id="Origin_Airport_ID" placeholder="" value="" name="Origin_Airport_ID" required>
+                        <div class="invalid-feedback">
+                          출발 공항 ID를 입력해주세요.
+                        </div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label for="Destination_Airport_ID">도착 공항 ID</label>
+                      <input type="text" class="form-control" id="Destination_Airport_ID" placeholder="" value="" name="Destination_Airport_ID" required>
+                      <div class="invalid-feedback">
+                        도착 공항 ID를 입력해주세요.
+                      </div>
+                    </div>
+                      <!--<div class="col-md-4 mb-3">
+                          <label for="Origin_State">출발지 주(state) </label>
+                        <input type="text" class="form-control" id="Origin_State" placeholder="" value="" name="Origin_State" required>
+                        <div class="invalid-feedback">
+                          출발지 주(state)를 입력해주세요.
+                        </div>
+                      </div>-->
+                    </div>
+  
+                    <div class="row">
+                      <!--<div class="col-md-4 mb-3">
+                          <label for="Destination_Airport">도착 공항</label>
+                          <input type="text" class="form-control" id="Destination_Airport" placeholder="" value="" name="Destination_Airport" required>
+                        <div class="invalid-feedback">
+                          도착 공항을 입력해주세요.
+                        </div>
+                      </div>-->
+                      <!--<div class="col-md-4 mb-3">
+                          <label for="Destination_Airport_ID">도착 공항 ID</label>
+                        <input type="text" class="form-control" id="Destination_Airport_ID" placeholder="" value="" name="Destination_Airport_ID" required>
+                        <div class="invalid-feedback">
+                          도착 공항 ID를 입력해주세요.
+                        </div>
+                      </div>-->
+                      <!--<div class="col-md-4 mb-3">
+                          <label for="Destination_State">도착지 주(state)</label>
+                        <input type="text" class="form-control" id="Destination_State" placeholder="" value="" name="Destination_State" required>
+                        <div class="invalid-feedback">
+                          도착지 주(state)를 입력해주세요.
+                        </div>
+                      </div>-->
+                    </div>
+  
+                    <!--<div class="mb-3">
+                      <label for="Distance">거리</label>
+                    <input type="text" class="form-control" id="Distance" placeholder="" value="" name="Distance" required>
+                    <div class="invalid-feedback">
+                      거리를 입력해주세요.
+                    </div>
+                  </div>-->
+                  
+  
+                  <div class="row">
+                      <!--<div class="col-md-6 mb-3">
+                          <label for="Airline">항공사</label>
+                          <input type="text" class="form-control" id="Airline" placeholder="" value="" name="Airline" required>
+                        <div class="invalid-feedback">
+                          항공사를 입력해주세요.
+                        </div>
+                      </div>-->
+                      <!--<div class="col-md-6 mb-3">
+                          <label for="Carrier_Code">항공사 코드(IATA)</label>
+                        <input type="text" class="form-control" id="Carrier_Code" placeholder="" value="" name="Carrier_Code" required>
+                        <div class="invalid-feedback">
+                          항공사 코드(IATA)를 입력해주세요.
+                        </div>
+                      </div>-->
+                  </div>
+  
+                  <div class="row">
+                      <div class="col-md-6 mb-3">
+                          <label for="Carrier_ID">항공사 식별번호(DOT)</label>
+                          <input type="text" class="form-control" id="Carrier_ID" placeholder="" value="" name="Carrier_ID" required>
+                        <div class="invalid-feedback">
+                          항공사 식별번호(DOT)를 입력해주세요.
+                        </div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                          <label for="Tail_Number">항공기 등록번호</label>
+                        <input type="text" class="form-control" id="Tail_Number" placeholder="" value="" name="Tail_Number" required>
+                        <div class="invalid-feedback">
+                          항공기 등록번호를 입력해주세요.
+                        </div>
+                      </div>
+                  </div>
+                  <div class="mb-4"></div>
+                  <input class="btn btn-primary btn-lg btn-block" type="submit" value="Predict">
+                
+
+              </form>
+              
+
+              <!--<br>
+              <h3>지연될 확률</h3>
+              <h3>{{ prediction }}</h3>-->
+
+            </div>
+
+    </div>
+    
+</body>
+
+<script>
+    window.addEventListener('load', () => {
+      const forms = document.getElementsByClassName('validation-form');
+
+      Array.prototype.filter.call(forms, (form) => {
+        form.addEventListener('submit', function (event) {
+          if (form.checkValidity() === false) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+
+          form.classList.add('was-validated');
+        }, false);
+      });
+    }, false);
+  </script>
+
+</html>
